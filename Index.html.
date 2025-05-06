@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Wordle RU Custom</title>
+  <style>
+    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
+    input, button, select { font-size: 1.2em; margin: 5px; padding: 5px; }
+    .grid { display: grid; gap: 5px; margin-top: 20px; }
+    .cell { width: 60px; height: 60px; border: 2px solid #ccc; text-align: center; font-size: 2em; line-height: 60px; }
+    .correct { background-color: green; color: white; }
+    .present { background-color: orange; color: white; }
+    .absent { background-color: gray; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Wordle на русском</h1>
+  <p>Введите загаданное слово:</p>
+  <input id="secretWord" placeholder="слово">
+  <label>Длина слова: <input id="wordLength" type="number" value="5" min="3" max="10"></label>
+  <button onclick="setSecret()">Задать слово</button>
+  <p><button onclick="copyLink()">Скопировать ссылку с загадкой</button></p>
+
+  <div id="game" style="display:none;">
+    <p>Введите вашу догадку:</p>
+    <input id="guessInput" placeholder="попытка">
+    <button onclick="submitGuess()">Проверить</button>
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <script>
+    let secret = '';
+    let wordLength = 5;
+    const grid = document.getElementById('grid');
+
+    function setSecret() {
+      const input = document.getElementById('secretWord').value.toLowerCase();
+      wordLength = parseInt(document.getElementById('wordLength').value);
+      if (input.length !== wordLength) return alert(`Слово должно содержать ${wordLength} букв`);
+      secret = input;
+      document.getElementById('guessInput').maxLength = wordLength;
+      grid.style.gridTemplateColumns = `repeat(${wordLength}, 60px)`;
+      document.getElementById('game').style.display = 'block';
+    }
+
+    function submitGuess() {
+      const guess = document.getElementById('guessInput').value.toLowerCase();
+      if (guess.length !== wordLength) return alert(`Попытка должна содержать ${wordLength} букв`);
+      const row = [];
+      for (let i = 0; i < wordLength; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = guess[i];
+        if (guess[i] === secret[i]) {
+          cell.classList.add('correct');
+        } else if (secret.includes(guess[i])) {
+          cell.classList.add('present');
+        } else {
+          cell.classList.add('absent');
+        }
+        row.push(cell);
+      }
+      row.forEach(cell => grid.appendChild(cell));
+    }
+
+    function copyLink() {
+      const word = document.getElementById('secretWord').value.toLowerCase();
+      const len = document.getElementById('wordLength').value;
+      const link = `${window.location.origin + window.location.pathname}?word=${word}&len=${len}`;
+      navigator.clipboard.writeText(link).then(() => alert('Ссылка скопирована!'));
+    }
+
+    // Чтение из URL
+    window.onload = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('word')) {
+        secret = params.get('word');
+        wordLength = parseInt(params.get('len')) || secret.length;
+        document.getElementById('wordLength').value = wordLength;
+        document.getElementById('secretWord').value = secret;
+        document.getElementById('guessInput').maxLength = wordLength;
+        grid.style.gridTemplateColumns = `repeat(${wordLength}, 60px)`;
+        document.getElementById('game').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
